@@ -1,0 +1,11 @@
+[package]
+name = "estatic"
+version = "0.1.0"
+authors = ["piripant"]
+
+[dependencies]
+bitflags = "1.0.1"
+piston_window = "0.77.0"
+nalgebra = "0.14.1"
+image = "0.18.0"
+gfx = "0.17.1"
