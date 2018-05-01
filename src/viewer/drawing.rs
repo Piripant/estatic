@@ -98,6 +98,8 @@ fn update_texture(
 
     let mut imgbuf = ImageBuffer::new(world.width, world.height);
 
+    println!("Updating picture");
+
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         // Flip the y axis
         let y = world.height - 1 - y;

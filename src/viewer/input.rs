@@ -138,20 +138,15 @@ fn handle_edit(view: &mut ViewState, input: &InputState) {
     let cursor = view.get_world_pos(input.cursor.x, input.cursor.y);
 
     if view.world.in_bounds(cursor.x as i32, cursor.y as i32) {
-        let charge = &mut view.world.tiles[cursor.y as usize][cursor.x as usize];
-
         match input.held_mouse {
             Some(MouseButton::Left) => {
-                if *charge != view.charge {
-                    *charge = view.charge;
-                    view.changed = true;
-                }
+                view.changed =
+                    view.world
+                        .update_tile(view.charge, cursor.x as usize, cursor.y as usize);
             }
             Some(MouseButton::Right) => {
-                if *charge != 0 {
-                    *charge = 0;
-                    view.changed = true;
-                }
+                view.changed = view.world
+                    .update_tile(0, cursor.x as usize, cursor.y as usize);
             }
 
             _ => {}

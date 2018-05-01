@@ -42,6 +42,7 @@ pub struct World {
     pub height: u32,
     pub width: u32,
     pub tiles: Vec<Vec<i8>>,
+    pub updated_tiles: Vec<(i8, usize, usize)>,
     pub field: FieldGrid,
 }
 
@@ -54,12 +55,24 @@ impl World {
         }
 
         let field = FieldGrid::new(height as usize, width as usize, 3);
+        let updated_tiles = Vec::new();
 
         World {
             height,
             width,
             tiles,
+            updated_tiles,
             field,
+        }
+    }
+
+    pub fn update_tile(&mut self, charge: i8, x: usize, y: usize) -> bool {
+        if self.tiles[y][x] != charge {
+            self.updated_tiles.push((self.tiles[y][x], x, y));
+            self.tiles[y][x] = charge;
+            true
+        } else {
+            false
         }
     }
 
@@ -119,8 +132,6 @@ impl World {
     }
 
     pub fn calculate_field(&mut self) {
-        let charges = self.get_charges();
-
         let width = self.width as usize * self.field.ratio as usize;
         let height = self.height as usize * self.field.ratio as usize;
 
@@ -128,21 +139,29 @@ impl World {
             for y in 0..height {
                 let &mut (ref mut field_force, ref mut potential) = &mut self.field.grid[y][x];
 
-                *potential = 0.0;
-                *field_force = Vector::new(0.0, 0.0);
-
                 let real_position =
                     Vector::new(x as f64 + 0.5, y as f64 + 0.5) / self.field.ratio as f64;
-                for &(ref cx, ref cy) in &charges {
-                    let charge = self.tiles[*cy as usize][*cx as usize];
+
+                for &(ref old_charge, ref cx, ref cy) in &self.updated_tiles {
+                    let charge = &self.tiles[*cy as usize][*cx as usize];
                     let n_position = Vector::new(*cx as f64 + 0.5, *cy as f64 + 0.5);
                     let delta = real_position - n_position;
 
-                    *field_force += delta.normalize() * charge as f64 / delta.norm_squared();
-                    *potential += charge as f64 / delta.norm();
+                    if *old_charge != 0 {
+                        let (old_field, old_potential) = get_field(old_charge, &delta);
+                        *potential -= old_potential;
+                        *field_force -= old_field;
+                    }
+                    if *charge != 0 {
+                        let (new_field, new_potential) = get_field(charge, &delta);
+                        *potential += new_potential;
+                        *field_force += new_field;
+                    }
                 }
             }
         }
+
+        self.updated_tiles.clear();
     }
 
     pub fn calculate_lines(&mut self) -> Vec<Vec<Vector>> {
@@ -191,5 +210,18 @@ impl World {
         }
 
         lines
+    }
+}
+
+fn get_field(charge: &i8, delta: &Vector) -> (Vector, f64) {
+    use std::f64;
+
+    if delta.norm() != 0.0 {
+        (
+            delta.normalize() * *charge as f64 / delta.norm_squared(),
+            *charge as f64 / delta.norm(),
+        )
+    } else {
+        (Vector::new(f64::MAX, f64::MAX), f64::MAX)
     }
 }
