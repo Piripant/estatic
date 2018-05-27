@@ -1,6 +1,6 @@
-use viewer::ViewState;
 use Vector;
 use piston_window::*;
+use viewer::ViewState;
 
 use super::*;
 
@@ -117,6 +117,9 @@ pub fn handle_input(view: &mut ViewState, input: &mut InputState) {
     } else if input.pressed_keys.contains(&Key::F) {
         view.draw_settings.toggle(DrawSets::FIELD);
         view.changed = true;
+    } else if input.pressed_keys.contains(&Key::Space) {
+        view.offset.x = -(view.world.width as f64 / 2.0);
+        view.offset.y = view.world.height as f64 / 2.0;
     }
 
     handle_move(view, input);

@@ -1,8 +1,11 @@
 pub mod drawing;
 pub mod input;
+pub mod inputbox;
 
-use world::*;
 use Vector;
+use world::*;
+
+use piston_window::*;
 
 bitflags! {
     pub struct DrawSets: u32 {

@@ -47,14 +47,14 @@ pub struct World {
 }
 
 impl World {
-    pub fn new_empty(height: u32, width: u32) -> World {
+    pub fn new_empty(width: u32, height: u32) -> World {
         // Init the tiles and field to an empty space
         let mut tiles = Vec::new();
         for _ in 0..height {
             tiles.push(vec![0 as i8; width as usize]);
         }
 
-        let field = FieldGrid::new(height as usize, width as usize, 3);
+        let field = FieldGrid::new(width as usize, height as usize, 3);
         let updated_tiles = Vec::new();
 
         World {
@@ -213,6 +213,7 @@ impl World {
     }
 }
 
+#[inline]
 fn get_field(charge: &i8, delta: &Vector) -> (Vector, f64) {
     use std::f64;
 
@@ -222,6 +223,6 @@ fn get_field(charge: &i8, delta: &Vector) -> (Vector, f64) {
             *charge as f64 / delta.norm(),
         )
     } else {
-        (Vector::new(f64::MAX, f64::MAX), f64::MAX)
+        (Vector::new(0.0, 0.0), 0.0)
     }
 }

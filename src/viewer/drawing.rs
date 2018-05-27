@@ -1,5 +1,6 @@
 use piston_window::*;
 use viewer::input;
+use viewer::inputbox::InputBox;
 
 use super::*;
 
@@ -14,15 +15,28 @@ pub fn render_loop(mut view: ViewState) {
 
     let title = "Estatic";
     let mut window: PistonWindow = WindowSettings::new(title, [640, 480])
-        .exit_on_esc(true)
         .build()
         .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
     let mut texture = empty_texture(&mut window.factory, view.world.width, view.world.height);
     let mut field_lines = Vec::new();
 
+    let mut width_input = InputBox::new(window.factory.clone(), "Width", (10.0, 24.0));
+    let mut height_input = InputBox::new(window.factory.clone(), "Height", (10.0, 50.0));
+
+    let mut width = view.world.width;
+    let mut height = view.world.height;
+
     while let Some(e) = window.next() {
         input_state.event(&e);
+
+        width_input.input(&mut width);
+        height_input.input(&mut height);
+        if width != view.world.width || height != view.world.height {
+            view.world = World::new_empty(width, height);
+            texture = empty_texture(&mut window.factory, width, height);
+            view.changed = true;
+        }
 
         if view.changed {
             view.world.calculate_field();
@@ -61,17 +75,18 @@ pub fn render_loop(mut view: ViewState) {
                             let npos =
                                 view.get_screen_pos(n_position.x as f64, n_position.y as f64);
 
-                            if view.in_screen(pos.x, pos.y) || view.in_screen(npos.x, npos.y) {
-                                let line_data = [pos.x, pos.y, npos.x, npos.y];
-                                line([0.1, 0.1, 0.1, 0.8], 1.0, line_data, c.transform, g);
-                            }
+                            let line_data = [pos.x, pos.y, npos.x, npos.y];
+                            line([0.1, 0.1, 0.1, 0.8], 1.0, line_data, c.transform, g);
                         }
                     }
                 }
-            });
 
-            input::handle_input(&mut view, &mut input_state);
-            input_state.processed();
+                width_input.update(&mut input_state, &c, g);
+                height_input.update(&mut input_state, &c, g);
+
+                input::handle_input(&mut view, &mut input_state);
+                input_state.processed();
+            });
         }
     }
 }
@@ -97,8 +112,6 @@ fn update_texture(
     use image::Pixel;
 
     let mut imgbuf = ImageBuffer::new(world.width, world.height);
-
-    println!("Updating picture");
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
         // Flip the y axis

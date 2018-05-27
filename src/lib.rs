@@ -7,5 +7,5 @@ extern crate piston_window;
 
 type Vector = nalgebra::Vector2<f64>;
 
-pub mod world;
 pub mod viewer;
+pub mod world;
