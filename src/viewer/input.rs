@@ -55,6 +55,19 @@ impl InputState {
         self.mouse_wheel = 0.0;
     }
 
+    /// Consumes all input a.k.a. deletes it
+    pub fn consume(&mut self) {
+        self.pressed_mouse = None;
+        self.held_mouse = None;
+        self.released_mouse = None;
+
+        self.pressed_keys.clear();
+        self.released_keys.clear();
+        self.held_keys.clear();
+
+        self.mouse_wheel = 0.0;
+    }
+
     /// Updates the current Input State
     pub fn event(&mut self, e: &Event) {
         e.mouse_cursor(|x, y| {
@@ -106,20 +119,30 @@ impl InputState {
 }
 
 pub fn handle_input(view: &mut ViewState, input: &mut InputState) {
-    if input.pressed_keys.contains(&Key::C) {
-        view.charge = -view.charge;
-    } else if input.pressed_keys.contains(&Key::P) {
-        view.draw_settings.toggle(DrawSets::POTENTIAL);
-        view.changed = true;
-    } else if input.pressed_keys.contains(&Key::L) {
-        view.draw_settings.toggle(DrawSets::FIELD_LINES);
-        view.changed = true;
-    } else if input.pressed_keys.contains(&Key::F) {
-        view.draw_settings.toggle(DrawSets::FIELD);
-        view.changed = true;
-    } else if input.pressed_keys.contains(&Key::Space) {
-        view.offset.x = -(view.world.width as f64 / 2.0);
-        view.offset.y = view.world.height as f64 / 2.0;
+    for key in &input.pressed_keys {
+        match key {
+            &Key::C => {
+                view.charge = -view.charge;
+            }
+            &Key::P => {
+                view.draw_settings.toggle(DrawSets::POTENTIAL);
+                view.changed = true;
+            }
+            &Key::L => {
+                view.draw_settings.toggle(DrawSets::FIELD_LINES);
+                view.changed = true;
+            }
+            &Key::F => {
+                view.draw_settings.toggle(DrawSets::FIELD);
+                view.changed = true;
+            }
+            &Key::Space => {
+                view.offset.x = -(view.world.width as f64 / 2.0);
+                view.offset.y = view.world.height as f64 / 2.0;
+            }
+
+            _ => {}
+        }
     }
 
     handle_move(view, input);

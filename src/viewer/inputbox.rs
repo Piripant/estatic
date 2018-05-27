@@ -71,7 +71,7 @@ impl InputBox {
             let cursor = input.cursor;
             if cursor.x > start.0 && cursor.x < end.0 && cursor.y > start.1 && cursor.y < end.1 {
                 self.active = true;
-                input.processed();
+                input.consume();
             } else {
                 self.active = false;
             }
