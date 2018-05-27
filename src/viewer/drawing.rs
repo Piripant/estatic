@@ -21,8 +21,12 @@ pub fn render_loop(mut view: ViewState) {
     let mut texture = empty_texture(&mut window.factory, view.world.width, view.world.height);
     let mut field_lines = Vec::new();
 
-    let mut width_input = InputBox::new(window.factory.clone(), "Width", (10.0, 24.0));
-    let mut height_input = InputBox::new(window.factory.clone(), "Height", (10.0, 50.0));
+    let mut width_input = InputBox::new(window.factory.clone(), (10.0, 24.0))
+        .description("Width")
+        .value(view.world.width);
+    let mut height_input = InputBox::new(window.factory.clone(), (10.0, 50.0))
+        .description("Height")
+        .value(view.world.height);
 
     let mut width = view.world.width;
     let mut height = view.world.height;

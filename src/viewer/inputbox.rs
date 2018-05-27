@@ -4,6 +4,7 @@ use world::World;
 
 use piston_window::*;
 use std::str::FromStr;
+use std::string::ToString;
 
 pub struct InputBox {
     active: bool,
@@ -11,24 +12,36 @@ pub struct InputBox {
 
     input: String,
 
-    offset: (f64, f64),
+    pub offset: (f64, f64),
 
     glyphs: Glyphs,
 }
 
 impl InputBox {
-    pub fn new(factory: GfxFactory, description: &str, offset: (f64, f64)) -> InputBox {
+    pub fn new(factory: GfxFactory, offset: (f64, f64)) -> InputBox {
         let font = include_bytes!("../../assets/FiraSans-Regular.ttf");
         let glyphs = Glyphs::from_bytes(font, factory, TextureSettings::new()).unwrap();
 
-        let description = description.to_string();
         InputBox {
             active: false,
-            description,
-            input: "200".to_string(),
+            description: String::new(),
+            input: String::new(),
             offset,
             glyphs,
         }
+    }
+
+    pub fn description(mut self, description: &str) -> InputBox {
+        self.description = description.to_string();
+        self
+    }
+
+    pub fn value<T>(mut self, value: T) -> InputBox
+    where
+        T: ToString,
+    {
+        self.input = value.to_string();
+        self
     }
 
     pub fn input<T>(&self, value: &mut T)
