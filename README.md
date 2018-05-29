@@ -1,7 +1,7 @@
 # estatic
 Estatic is a static field visualizer written in the Rust language with the help of the piston, image, bitflags and nalgebra crates.
 
-It's main aim is education, but it can produce accurate visualization thanks to settable resolutions.
+It's main aim is education, but it can produce accurate visualizations thanks to settable resolutions.
 
 ## Features
 * An easy to use graphic interface
@@ -16,7 +16,7 @@ The compiled application is self contained in a single executable file
 * Center view: `Space`
 * Place change: `Left Mouse`
 * Erase charge: `Right Mouse`
-* Switch change sign: `C`
+* Switch charge sign: `C`
 * Toggle potential visualization: `P`
 * Toggle field visualization: `F`
 * Toggle field lines visualization: `L`
