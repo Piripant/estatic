@@ -23,7 +23,7 @@ The compiled application is self contained in a single executable file
 ## Controls
 * Move view: `Shift + Right Mouse + Drag`
 * Center view: `Space`
-* Place change: `Left Mouse`
+* Place charge: `Left Mouse`
 * Erase charge: `Right Mouse`
 * Switch charge sign: `C`
 * Toggle potential visualization: `P`
