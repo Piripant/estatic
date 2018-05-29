@@ -1,6 +1,7 @@
 use Vector;
 
 #[derive(Debug, Clone)]
+/// A field grid which can be bigger than the tiles grid
 pub struct FieldGrid {
     ratio: u8,
     grid: Vec<Vec<(Vector, f64)>>,
@@ -21,6 +22,7 @@ impl FieldGrid {
     }
 
     #[inline]
+    // Get a field tile using tiles' coordinates
     pub fn get(&self, position: &Vector) -> &(Vector, f64) {
         let x = position.x * self.ratio as f64;
         let y = position.y * self.ratio as f64;
@@ -29,6 +31,7 @@ impl FieldGrid {
     }
 
     #[inline]
+    // Get a mutable reference to the field vector using tiles' coordinates
     pub fn get_mut(&mut self, position: &Vector) -> &mut (Vector, f64) {
         let x = position.x * self.ratio as f64;
         let y = position.y * self.ratio as f64;
@@ -38,23 +41,28 @@ impl FieldGrid {
 }
 
 #[derive(Debug, Clone)]
+/// The world containing all information for the simulation
 pub struct World {
     pub height: u32,
     pub width: u32,
     pub tiles: Vec<Vec<i8>>,
+    // (old_charge, x, y)
     pub updated_tiles: Vec<(i8, usize, usize)>,
     pub field: FieldGrid,
 }
 
 impl World {
-    pub fn new_empty(width: u32, height: u32) -> World {
+    pub fn new_empty(width: u32, height: u32, resolution: u8) -> World {
         // Init the tiles and field to an empty space
         let mut tiles = Vec::new();
         for _ in 0..height {
             tiles.push(vec![0 as i8; width as usize]);
         }
 
-        let field = FieldGrid::new(width as usize, height as usize, 3);
+        // The field_ratio must be an odd number
+        // So there are always centered tiles in the subdivision
+        let field_ratio = 2 * resolution - 1;
+        let field = FieldGrid::new(width as usize, height as usize, field_ratio);
         let updated_tiles = Vec::new();
 
         World {
@@ -66,7 +74,27 @@ impl World {
         }
     }
 
+    pub fn set_resolution(&mut self, resolution: u8) {
+        // The field_ratio must be an odd number
+        // So there are always centered tiles in the subdivision
+        let field_ratio = 2 * resolution - 1;
+        self.field = FieldGrid::new(self.width as usize, self.height as usize, field_ratio);
+
+        // The first number must be 0 because we have already reset the field
+        // When we created the new one with the new resolution
+        let charges = self.get_charges()
+            .iter()
+            .map(|&charge| (0, charge.0, charge.1))
+            .collect();
+        self.updated_tiles = charges;
+    }
+
+    pub fn resolution(&self) -> u8 {
+        (self.field.ratio + 1) / 2
+    }
+
     pub fn update_tile(&mut self, charge: i8, x: usize, y: usize) -> bool {
+        // If the tiles doesnt already have this charge
         if self.tiles[y][x] != charge {
             self.updated_tiles.push((self.tiles[y][x], x, y));
             self.tiles[y][x] = charge;
@@ -89,6 +117,7 @@ impl World {
         for x in 0..self.width {
             for y in 0..self.height {
                 let charge = self.tiles[y as usize][x as usize];
+                // If the tile is charged
                 if charge != 0 {
                     charges.push((x as usize, y as usize));
                 }
@@ -99,6 +128,7 @@ impl World {
     }
 
     pub fn get_borders(&self) -> Vec<(i8, usize, usize)> {
+        // A moore neighborhood
         let directions = [
             (-1, 0),
             (1, 0),
@@ -118,7 +148,9 @@ impl World {
                 let nx = cx as i32 + dx;
                 let ny = cy as i32 + dy;
 
+                // If the neighbor is within the grid
                 if self.in_bounds(nx, ny) {
+                    // If the neighbor is not charged & we haven't already added it
                     if self.tiles[ny as usize][nx as usize] == 0
                         && !borders.contains(&(self.tiles[cy][cx], nx as usize, ny as usize))
                     {
@@ -132,6 +164,7 @@ impl World {
     }
 
     pub fn calculate_field(&mut self) {
+        // Update the grid using the field grid coordinates
         let width = self.width as usize * self.field.ratio as usize;
         let height = self.height as usize * self.field.ratio as usize;
 
@@ -139,20 +172,27 @@ impl World {
             for y in 0..height {
                 let &mut (ref mut field_force, ref mut potential) = &mut self.field.grid[y][x];
 
+                // The position of the field on the tiles grid
                 let real_position =
                     Vector::new(x as f64 + 0.5, y as f64 + 0.5) / self.field.ratio as f64;
 
                 for &(ref old_charge, ref cx, ref cy) in &self.updated_tiles {
+                    // Charge of the updated tile
                     let charge = &self.tiles[*cy as usize][*cx as usize];
+                    // The position of neighbor
                     let n_position = Vector::new(*cx as f64 + 0.5, *cy as f64 + 0.5);
+                    // The distance between the position of the updated tile
+                    // and the position of the field tile we are updating
                     let delta = real_position - n_position;
 
                     if *old_charge != 0 {
+                        // Remove the field that was once generated
                         let (old_field, old_potential) = get_field(old_charge, &delta);
                         *potential -= old_potential;
                         *field_force -= old_field;
                     }
                     if *charge != 0 {
+                        // Add the new field of the updated charge
                         let (new_field, new_potential) = get_field(charge, &delta);
                         *potential += new_potential;
                         *field_force += new_field;
@@ -161,6 +201,7 @@ impl World {
             }
         }
 
+        // All tiles have been updated
         self.updated_tiles.clear();
     }
 
@@ -214,6 +255,7 @@ impl World {
 }
 
 #[inline]
+/// Calculate the eletric field & potential of `charge` with distance `delta`
 fn get_field(charge: &i8, delta: &Vector) -> (Vector, f64) {
     use std::f64;
 

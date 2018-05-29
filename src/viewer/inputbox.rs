@@ -1,6 +1,4 @@
-use super::*;
 use viewer::input::InputState;
-use world::World;
 
 use piston_window::*;
 use std::str::FromStr;
@@ -117,7 +115,6 @@ impl InputBox {
 }
 
 fn text_hitbox(text: &str, size: u32, cache: &mut Glyphs) -> (f64, f64) {
-    use piston_window::character::Character;
     use piston_window::character::CharacterCache;
 
     let width = cache.width(size, text).unwrap();

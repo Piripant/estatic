@@ -5,8 +5,6 @@ pub mod inputbox;
 use Vector;
 use world::*;
 
-use piston_window::*;
-
 bitflags! {
     pub struct DrawSets: u32 {
         const POTENTIAL = 0b00000001;

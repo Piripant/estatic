@@ -27,18 +27,29 @@ pub fn render_loop(mut view: ViewState) {
     let mut height_input = InputBox::new(window.factory.clone(), (10.0, 50.0))
         .description("Height")
         .value(view.world.height);
+    let mut resolution_input = InputBox::new(window.factory.clone(), (10.0, 76.0))
+        .description("Resolution")
+        .value(view.world.resolution());
 
     let mut width = view.world.width;
     let mut height = view.world.height;
+    let mut resolution = view.world.resolution();
 
     while let Some(e) = window.next() {
         input_state.event(&e);
 
+        // Set the variables from the UI
         width_input.input(&mut width);
         height_input.input(&mut height);
+        resolution_input.input(&mut resolution);
+
         if width != view.world.width || height != view.world.height {
-            view.world = World::new_empty(width, height);
+            view.world = World::new_empty(width, height, resolution);
             texture = empty_texture(&mut window.factory, width, height);
+            view.changed = true;
+        }
+        if resolution != view.world.resolution() {
+            view.world.set_resolution(resolution);
             view.changed = true;
         }
 
@@ -87,6 +98,7 @@ pub fn render_loop(mut view: ViewState) {
 
                 width_input.update(&mut input_state, &c, g);
                 height_input.update(&mut input_state, &c, g);
+                resolution_input.update(&mut input_state, &c, g);
 
                 input::handle_input(&mut view, &mut input_state);
                 input_state.processed();
