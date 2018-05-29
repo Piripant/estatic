@@ -4,6 +4,7 @@ use viewer::ViewState;
 
 use super::*;
 
+/// The current state of input (buttons pressed, released, held, etc...)
 pub struct InputState {
     pub last_cursor: Vector,
     pub cursor: Vector,
@@ -122,6 +123,7 @@ pub fn handle_input(view: &mut ViewState, input: &mut InputState) {
     for key in &input.pressed_keys {
         match key {
             &Key::C => {
+                // Switch the sign of the charge
                 view.charge = -view.charge;
             }
             &Key::P => {
@@ -152,6 +154,7 @@ pub fn handle_input(view: &mut ViewState, input: &mut InputState) {
 fn handle_move(view: &mut ViewState, input: &InputState) {
     if let Some(MouseButton::Right) = input.held_mouse {
         if input.held_keys.contains(&Key::LShift) {
+            // Move the view using mouse drag
             let delta_mouse = input.cursor - input.last_cursor;
             view.offset += delta_mouse / view.scale;
         }
@@ -166,11 +169,13 @@ fn handle_edit(view: &mut ViewState, input: &InputState) {
     if view.world.in_bounds(cursor.x as i32, cursor.y as i32) {
         match input.held_mouse {
             Some(MouseButton::Left) => {
+                // Set the charge to the current editing charge
                 view.changed =
                     view.world
                         .update_tile(view.charge, cursor.x as usize, cursor.y as usize);
             }
             Some(MouseButton::Right) => {
+                // Erasing just sets the charge to neutral (0)
                 view.changed = view.world
                     .update_tile(0, cursor.x as usize, cursor.y as usize);
             }

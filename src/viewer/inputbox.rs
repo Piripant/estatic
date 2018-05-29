@@ -4,13 +4,17 @@ use piston_window::*;
 use std::str::FromStr;
 use std::string::ToString;
 
+/// A GUI input box
 pub struct InputBox {
+    // Is the input box focused
     active: bool,
     description: String,
 
+    // The current input held as a string
     input: String,
 
-    pub offset: (f64, f64),
+    // Offset from the screen upper left corner
+    offset: (f64, f64),
 
     glyphs: Glyphs,
 }
@@ -34,6 +38,7 @@ impl InputBox {
         self
     }
 
+    /// Set the input box value from type T
     pub fn value<T>(mut self, value: T) -> InputBox
     where
         T: ToString,
@@ -42,6 +47,7 @@ impl InputBox {
         self
     }
 
+    // Get the input box value parsed to type T
     pub fn input<T>(&self, value: &mut T)
     where
         T: FromStr,
@@ -54,6 +60,7 @@ impl InputBox {
         }
     }
 
+    // Render and process the input events
     pub fn update(&mut self, input: &mut InputState, c: &Context, g: &mut G2d) {
         let full_text = format!("{}: {}", self.description, self.input);
 
@@ -114,6 +121,7 @@ impl InputBox {
     }
 }
 
+/// Get the text width and height
 fn text_hitbox(text: &str, size: u32, cache: &mut Glyphs) -> (f64, f64) {
     use piston_window::character::CharacterCache;
 

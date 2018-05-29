@@ -10,17 +10,16 @@ use image::ImageBuffer;
 pub fn render_loop(mut view: ViewState) {
     let mut input_state = input::InputState::new();
 
-    view.offset.x = -(view.world.width as f64 / 2.0);
-    view.offset.y = view.world.height as f64 / 2.0;
-
     let title = "Estatic";
     let mut window: PistonWindow = WindowSettings::new(title, [640, 480])
         .build()
         .unwrap_or_else(|e| panic!("Failed to build PistonWindow: {}", e));
 
+    // Create the texture to render the world on
     let mut texture = empty_texture(&mut window.factory, view.world.width, view.world.height);
     let mut field_lines = Vec::new();
 
+    // Init the GUI
     let mut width_input = InputBox::new(window.factory.clone(), (10.0, 24.0))
         .description("Width")
         .value(view.world.width);
@@ -43,20 +42,25 @@ pub fn render_loop(mut view: ViewState) {
         height_input.input(&mut height);
         resolution_input.input(&mut resolution);
 
+        // When the user has inputted new dimentions update the world
         if width != view.world.width || height != view.world.height {
             view.world = World::new_empty(width, height, resolution);
             texture = empty_texture(&mut window.factory, width, height);
             view.changed = true;
         }
+        // When the user inputted a new resolution update the world
         if resolution != view.world.resolution() {
             view.world.set_resolution(resolution);
             view.changed = true;
         }
 
+        // If the world has been changed update the view
         if view.changed {
+            // Calculate new field and field_lines
             view.world.calculate_field();
             field_lines = view.world.calculate_lines();
 
+            // Render the new world to the texture
             update_texture(
                 &view.world,
                 view.draw_settings,
@@ -107,6 +111,7 @@ pub fn render_loop(mut view: ViewState) {
     }
 }
 
+/// Create a new empty texture with `Nearest` filtering
 fn empty_texture(factory: &mut GfxFactory, width: u32, height: u32) -> G2dTexture {
     use piston_window::texture::{CreateTexture, Format};
 
@@ -127,6 +132,7 @@ fn update_texture(
 ) {
     use image::Pixel;
 
+    // Create a new image to draw to
     let mut imgbuf = ImageBuffer::new(world.width, world.height);
 
     for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
@@ -143,33 +149,47 @@ fn update_texture(
             let intensity = charge.abs() as u8 * 2;
 
             if charge > 0 {
+                // When the charge is positive draw it red
                 image::Rgba([intensity, 0, 0, 255])
             } else if charge < 0 {
+                // When the charge is negative draw it blue
                 image::Rgba([0, 0, intensity, 255])
             } else {
+                // When the change is neutral draw it transparent
                 image::Rgba([0, 0, 0, 0])
             }
         };
 
         // Draw potential
         let pot_pixel = {
+            // We subtract the potential to 255
+            // To make it so that when the potential is absent
+            // The intesity is 255, drawing the white color instead of the black color
             let intensity = 255.0 - potential.abs();
             let intensity = if intensity < 0.0 { 0.0 } else { intensity };
 
             if potential > 0.0 {
+                // When the potential is positive draw it reddish
                 image::Rgba([255, intensity as u8, intensity as u8, 127])
             } else {
+                // When the potential is negative draw is blueish
                 image::Rgba([intensity as u8, intensity as u8, 255, 127])
             }
         };
 
         let field_pixel = {
+            // We subtract the field to 255
+            // To make is that when the field is absent
+            // We draw the white color instead of the black color
+            // (same as potential)
             let force = 255.0 - force.norm();
             let force = if force < 0.0 { 0.0 } else { force };
 
+            // Alpha is 255 because of the way blending works
             image::Rgba([force as u8, force as u8, force as u8, 255])
         };
 
+        // Blend the calculated pixels in particular order to blend them correctly
         if settings.contains(DrawSets::FIELD) {
             *pixel = field_pixel;
             if settings.contains(DrawSets::POTENTIAL) {
@@ -184,5 +204,6 @@ fn update_texture(
         }
     }
 
+    // Apply the image to the texture
     texture.update(encoder, &imgbuf).unwrap();
 }

@@ -215,6 +215,7 @@ impl World {
         'charges: for &(charge, x, y) in &borders {
             let mut line = Vec::new();
             let (mut x, mut y) = (x as i32, y as i32);
+            // The sign the charge is needed to move in the right direction along the field
             let charge = charge.signum() as f64;
 
             let mut old_angle: f64 = f64::INFINITY;
@@ -233,11 +234,15 @@ impl World {
                 let force = &self.field.get(&position).0;
 
                 let angle = f64::atan2(force.y, force.x) * 10.0;
+                // Only push the new point
+                // If there was a significant change in the direction of the field line
+                // (So we can save memory for straight lines)
                 if angle.round() != old_angle.round() {
                     line.push(position);
                     old_angle = angle;
                 }
 
+                // Move the position along the field
                 old_position = position;
                 position += force.normalize() * charge / self.field.ratio as f64;
                 y = position.y.floor() as i32;
@@ -246,6 +251,8 @@ impl World {
                 length += 1;
             }
 
+            // Add the last position
+            // So that even straight lines have a last point
             line.push(old_position);
             lines.push(line);
         }
