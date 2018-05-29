@@ -3,11 +3,20 @@ Estatic is a static field visualizer written in the Rust language with the help 
 
 It's main aim is education, but it can produce accurate visualizations thanks to settable resolutions.
 
+## Building
+Estatic uses cargo, so compiling only consists in typing:
+
+`cargo build`
+
+If you want to directly run the application, you can also use:
+
+`cargo run --release`
+
 ## Features
 * An easy to use graphic interface
-* Colored field intesity and potential
-* Field lines
 * An editor to place and change charges
+* Colored field intensity and potential
+* Field lines
 
 The compiled application is self contained in a single executable file
 
